@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 @Service
 public class SurveyService {
     private static List<Survey> surveys = new ArrayList<>();
+
     static {
         Question question1 = new Question("Question1",
                 "Most Popular Cloud Platform Today", Arrays.asList(
@@ -40,15 +41,16 @@ public class SurveyService {
     }
 
     public Survey retriveSurveyById(String surveyId) {
-       Predicate<Survey> predicate = survey -> survey.getId().equalsIgnoreCase(surveyId);
+        Predicate<Survey> predicate = survey -> survey.getId().equalsIgnoreCase(surveyId);
 
-       Optional<Survey> optionalSurvey = surveys.stream()
-               .filter(predicate)
-               .findFirst();
-       if(optionalSurvey.isEmpty())
-           return null;
+        Optional<Survey> optionalSurvey = surveys.stream()
+                .filter(predicate)
+                .findFirst();
+        if (optionalSurvey.isEmpty())
+            return null;
         return optionalSurvey.get();
     }
+
     public List<Question> retrieveAllSurveyQuestions(String surveyId) {
         Survey survey = retriveSurveyById(surveyId);
 
@@ -72,5 +74,36 @@ public class SurveyService {
             return null;
 
         return optionalQuestion.get();
+    }
+
+    public List<Question> addNewSurveyQuestion(String surveyId, Question questions) {
+        List<Question> newQuestions = retrieveAllSurveyQuestions(surveyId);
+        newQuestions.add(questions);
+        return newQuestions;
+    }
+
+    public String addNewSurveyRandomQuestionId(String surveyId, Question questions) {
+        List<Question> newQuestions = retrieveAllSurveyQuestions(surveyId);
+        questions.setId(generateRandomId());
+        newQuestions.add(questions);
+        return questions.getId();
+    }
+
+    private String generateRandomId() {
+        SecureRandom secureRandom = new SecureRandom();
+        String randomId = new BigInteger(32, secureRandom).toString();
+        return randomId;
+    }
+
+    public List<Question> deleteSpecificSurveyQuestion(String surveyId, String questionId) {
+        List<Question> surveyQuestions = retrieveAllSurveyQuestions(surveyId);
+        if (surveyQuestions == null)
+            return null;
+        Predicate<? super Question> predicate = q -> q.getId().equalsIgnoreCase(questionId);
+        boolean removed = surveyQuestions.removeIf(predicate);
+        Optional<Question> optionalQuestion = surveyQuestions.stream()
+                .filter(predicate).findFirst();
+        if (!removed) return null;
+        return surveyQuestions;
     }
 }
